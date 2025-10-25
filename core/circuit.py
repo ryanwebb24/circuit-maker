@@ -8,3 +8,6 @@ class Circuit:
 
     def add_component(self, component:Component):
         self.components[(component.x, component.y)] = component
+
+    def remove_component(self, x:int, y:int):
+        del self.components[(x,y)]

@@ -17,5 +17,9 @@ class Component(ABC):
         - I: Current vector
         """
         pass
+
+    @abstractmethod
+    def draw(self):
+        pass
     
     
