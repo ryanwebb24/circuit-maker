@@ -1,5 +1,6 @@
 
 import pygame
+import math
 # from components.resistor import Resistor
 # from core.circuit import Circuit
 
@@ -22,11 +23,13 @@ class Renderer:
         self.BLACK = (0, 0, 0)
         self.RED = (255, 0, 0)
 
+        self.border = 100
+
     def draw_grid(self):
-        for x in range(0, self.width, self.circuit.width):
-            pygame.draw.line(self.screen, self.LIGHT_GRAY, (x,0), (x,self.height))
-        for y in range(0, self.height, self.circuit.height):
-            pygame.draw.line(self.screen, self.LIGHT_GRAY, (0,y), (self.width,y))
+        for x in range(self.border, self.width - self.border, math.floor(self.width / self.circuit.width)):
+            pygame.draw.line(self.screen, self.LIGHT_GRAY, (x, self.border), (x,self.height - self.border))
+        for y in range(self.border, self.height - self.border, math.floor(self.height / self.circuit.height)):
+            pygame.draw.line(self.screen, self.LIGHT_GRAY, (self.border ,y), (self.width - self.border,y))
 
     def draw_components(self):
         for comp in self.circuit.components:
