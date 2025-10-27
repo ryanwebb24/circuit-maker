@@ -19,7 +19,15 @@ class Component(ABC):
         pass
 
     @abstractmethod
-    def draw(self):
+    def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
+        """
+        Draw the component at pixel coordinates on a pygame surface.
+
+        Parameters:
+        - screen: pygame Surface to draw on
+        - px, py: pixel center coordinates where the component should be drawn
+        - cell_w, cell_h: pixel size of a single grid cell (width, height)
+        """
         pass
     
     
