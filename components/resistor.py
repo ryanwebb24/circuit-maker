@@ -1,14 +1,27 @@
 from components.base_component import Component
 import pygame
-import math
+from components.enums import Orientation
 
 
 class Resistor(Component):
-    def __init__(self, name: str = "", n1: int = 0, n2: int = 0, resistance: float = 0, x: int = 0, y: int = 0, orientation: str = 'h'):
+    def __init__(self, name: str = "", n1: int = 0, n2: int = 0, x: int = 0, y: int = 0, orientation: Orientation = Orientation.E, resistance: float = 0):
+        """Create a resistor.
+
+        orientation must be an instance of components.enums.Orientation (N/E/S/W).
+        Passing an int matching the enum value is allowed. Passing strings is no
+        longer supported.
+        """
         super().__init__(name, [n1, n2], x, y)
         self.resistance = resistance
-        # orientation: 'h' or 'v' (or 'horizontal' / 'vertical')
-        self.orientation = orientation.lower() if isinstance(orientation, str) else 'h'
+        # Require Orientation enum (or int that maps to it)
+        if isinstance(orientation, Orientation):
+            self.orientation = orientation
+        else:
+            try:
+                # allow integer values that match the enum
+                self.orientation = Orientation(orientation)
+            except Exception:
+                raise TypeError("orientation must be a components.enums.Orientation")
 
     def stamp(self, G, I):
         # Electrical stamping not implemented yet
@@ -29,7 +42,15 @@ class Resistor(Component):
 
         term_len = max(4, int(min(cell_w, cell_h) * 0.15))
 
-        if self.orientation in ('v', 'vertical'):
+        # Determine axis (vertical vs horizontal) and phase for zig-zag
+        ori = self.orientation
+        is_vertical = ori in (Orientation.N, Orientation.S)
+        # phase controls zig-zag direction so we can visually flip for N/S or E/W
+        phase = 1
+        if ori in (Orientation.S, Orientation.W):
+            phase = -1
+
+        if is_vertical:
             # Vertical resistor: terminals on top/bottom, zig-zag along Y
             top_y = py - half
             bottom_y = py + half
@@ -44,14 +65,15 @@ class Resistor(Component):
             pygame.draw.line(screen, (0, 0, 0), (cx_px, top_term_px), (cx_px, top_body_px), 2)
             pygame.draw.line(screen, (0, 0, 0), (cx_px, bottom_body_px), (cx_px, bottom_term_px), 2)
 
-            # Zig-zag along vertical axis: alternate x offsets
+            # Zig-zag along vertical axis: alternate x offsets, apply phase
             segments = 6
             pts = []
             amp = min(cell_w, cell_h) * 0.12
             for i in range(segments + 1):
                 t = i / segments
                 y = top_y + t * (bottom_y - top_y)
-                x = px + (amp if (i % 2 == 0) else -amp)
+                sign = amp if (i % 2 == 0) else -amp
+                x = px + phase * sign
                 pts.append((int(round(x)), int(round(y))))
 
             if len(pts) >= 2:
@@ -71,14 +93,15 @@ class Resistor(Component):
             pygame.draw.line(screen, (0, 0, 0), (left_term_px, cy_px), (left_body_px, cy_px), 2)
             pygame.draw.line(screen, (0, 0, 0), (right_body_px, cy_px), (right_term_px, cy_px), 2)
 
-            # Draw zig-zag resistor body
+            # Draw zig-zag resistor body (apply phase to vertical offsets)
             segments = 6
             pts = []
             amp = min(cell_w, cell_h) * 0.12
             for i in range(segments + 1):
                 t = i / segments
                 x = left_x + t * (right_x - left_x)
-                y = py + (amp if (i % 2 == 0) else -amp)
+                sign = amp if (i % 2 == 0) else -amp
+                y = py + phase * sign
                 pts.append((int(round(x)), int(round(y))))
 
             if len(pts) >= 2:

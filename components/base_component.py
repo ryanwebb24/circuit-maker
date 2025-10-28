@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
+from enums import Orientation
+
 
 class Component(ABC):
-    def __init__(self, name: str = "", nodes:list = [], x:int = 0, y:int = 0):
+    def __init__(self, name: str = "", nodes:list = [], x:int = 0, y:int = 0, orientation:Orientation = Orientation.E):
         self.name = name
         self.nodes = nodes
         self.x = x
         self.y = y
+        self.orientation = orientation
 
     @abstractmethod
     def stamp(self, G, I):

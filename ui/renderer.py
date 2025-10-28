@@ -2,8 +2,8 @@
 import pygame
 import math
 from ui.button import Button
-from components import Resistor
-from core.circuit import Circuit
+from components.resistor import Resistor
+from components.enums import Orientation
 
 class Renderer:
     def __init__(self, circuit, width=800, height=600):
@@ -17,7 +17,7 @@ class Renderer:
 
         self.circuit = circuit
         self.running = True
-        self.current_component = "WIRE"
+        self.current_tool = "WIRE"
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -160,14 +160,15 @@ class Renderer:
                 pass
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.pos[0] > self.border and event.pos[1] > self.border and self.current_component:
+                if event.pos[0] > self.border and event.pos[1] > self.border and self.current_tool:
                     x,y = self.pixel_to_grid(event.pos[0], event.pos[1])
-                    if self.current_component == "RESISTOR":
+                    if self.current_tool == "RESISTOR":
                         # need to add resistance slider
                         if isinstance(self.circuit.components.get((x,y)), Resistor):
-                            self.circuit.remove_component(x,y)
+                            self.circuit.remove_component(x, y)
                         else:
-                            self.circuit.add_component(Resistor("resistor",0,1,100,x,y))
+                            # default orientation EAST
+                            self.circuit.add_component(Resistor("resistor", 0, 1, x, y, Orientation.E, 100))
                     
 
             if event.type == pygame.QUIT:
@@ -189,4 +190,4 @@ class Renderer:
         self.handle_events()
 
     def _on_add_resistor(self):
-        self.current_component = "RESISTOR"
+        self.current_tool = "RESISTOR"
