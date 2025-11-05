@@ -1,5 +1,6 @@
 import pygame
 from typing import Callable, Optional, Tuple
+from ui.config import ButtonConfig
 
 
 class Button:
@@ -26,10 +27,8 @@ class Button:
         text: str,
         on_click: Optional[Callable] = None,
         font: Optional[pygame.font.Font] = None,
-        font_size: int = 18,
         colors: Optional[dict] = None,
-        border_color: Tuple[int, int, int] = (0, 0, 0),
-        border_width: int = 2,
+        selected: bool = False,
     ) -> None:
         if pygame.get_init() is False:
             pygame.init()
@@ -42,27 +41,22 @@ class Button:
         # State
         self.hover = False
         self.pressed = False
-
-        # Font
-        if font is None:
-            self.font = pygame.font.SysFont(None, font_size)
-        else:
-            self.font = font
+        self.selected = selected
 
         # Colors
-        default_colors = {
-            "bg": (200, 200, 200),
-            "hover": (180, 180, 180),
-            "pressed": (150, 150, 150),
-            "text": (0, 0, 0),
-            "disabled": (140, 140, 140),
-        }
-        self.colors = default_colors
+        self.colors = ButtonConfig.COLORS.copy()
         if colors:
             self.colors.update(colors)
 
-        self.border_color = border_color
-        self.border_width = border_width
+        # Font
+        if font is None:
+            self.font = pygame.font.SysFont(None, ButtonConfig.FONT_SIZE)
+        else:
+            self.font = font
+
+        # Border
+        self.border_color = ButtonConfig.BORDER_COLOR
+        self.border_width = ButtonConfig.BORDER_WIDTH
 
         # Pre-rendered text surface (updated in set_text)
         self._text_surf = None
@@ -74,7 +68,7 @@ class Button:
             self._text_surf = None
             self._text_rect = None
             return
-        color = self.colors["text"] if self.enabled else self.colors["disabled"]
+        color = self.colors["text"] if self.enabled else self.colors["disabled_text"]
         self._text_surf = self.font.render(self.text, True, color)
         self._text_rect = self._text_surf.get_rect(center=self.rect.center)
 
@@ -117,25 +111,35 @@ class Button:
                         pass
             self.pressed = False
 
+    def set_selected(self, selected: bool) -> None:
+        """Set the selected state of the button."""
+        self.selected = selected
+        self._render_text()
+
     def draw(self, surface: pygame.Surface) -> None:
-        """Draw the button on the given surface."""
-        # Background color depends on state
+        """Draw the button to a pygame surface."""
         if not self.enabled:
-            bg = self.colors["disabled"]
+            color = self.colors["disabled"]
+        elif self.selected:
+            if self.pressed:
+                color = self.colors["selected_pressed"]
+            elif self.hover:
+                color = self.colors["selected_hover"]
+            else:
+                color = self.colors["selected"]
         elif self.pressed:
-            bg = self.colors["pressed"]
+            color = self.colors["pressed"]
         elif self.hover:
-            bg = self.colors["hover"]
+            color = self.colors["hover"]
         else:
-            bg = self.colors["bg"]
+            color = self.colors["normal"]
 
-        pygame.draw.rect(surface, bg, self.rect)
-        if self.border_width > 0:
-            pygame.draw.rect(surface, self.border_color, self.rect, self.border_width)
-
-        if self._text_surf:
-            # Update text rect in case the button moved
-            self._text_rect = self._text_surf.get_rect(center=self.rect.center)
+        # Draw background
+        pygame.draw.rect(surface, color, self.rect)
+        # Draw border
+        pygame.draw.rect(surface, (0, 0, 0), self.rect, 2)
+        # Draw text
+        if self._text_surf and self._text_rect:
             surface.blit(self._text_surf, self._text_rect)
 
 

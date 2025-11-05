@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from enums import Orientation
+from components.enums import Orientation
 
 
 class Component(ABC):

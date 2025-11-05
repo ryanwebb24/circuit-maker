@@ -1,11 +1,12 @@
 import pygame
 
-from base_component import Component
-from enums import ComponentColors
+from components.base_component import Component
+from components.enums import ComponentColors, Orientation
 
 class Wire(Component):
-    def __init__(self, name:str = "wire", n1:int = 0, n2:int = 0, x:int = 0, y:int = 0, orientation:str = "h", color:ComponentColors = ComponentColors.RED):
+    def __init__(self, name:str = "wire", n1:int = 0, n2:int = 0, x:int = 0, y:int = 0, orientation:Orientation = Orientation.E, color:ComponentColors = ComponentColors.RED):
         super().__init__(name, [n1, n2], x, y)
+        self.orientation = orientation
         self.color = color
 
     def stamp(self, G, I):
@@ -14,44 +15,36 @@ class Wire(Component):
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
         """
-        Draw the resistor centered at pixel (px, py). The provided cell_w/cell_h
+        Draw the wire centered at pixel (px, py). The provided cell_w/cell_h
         describe the pixel size of a single grid cell so the resistor sizes itself
         appropriately without needing the renderer's grid math.
         """
         if screen is None:
             return
 
-        # Resistor visual size: fit inside one cell but leave some padding
+        # Wire visual size: fit inside one cell but leave some padding
         body_w = min(cell_w, cell_h) * 0.7
         half = body_w / 2.0
 
-        term_len = max(4, int(min(cell_w, cell_h) * 0.15))
+        ori = 'h'
+        if (self.orientation == Orientation.E or self.orientation == Orientation.W):
+            ori = 'h'
+        else:
+            ori = 'v'
 
-        if self.orientation in ('v', 'vertical'):
-            # Vertical resistor: terminals on top/bottom, zig-zag along Y
+        if ori in ('v', 'vertical'):
             top_y = py - half
             bottom_y = py + half
 
-            top_term_px = int(round(top_y - term_len))
-            top_body_px = int(round(top_y))
-            bottom_body_px = int(round(bottom_y))
-            bottom_term_px = int(round(bottom_y + term_len))
             cx_px = int(round(px))
 
-            # Draw terminals (vertical lines)
-            pygame.draw.line(screen, (0, 0, 0), (cx_px, top_term_px), (cx_px, top_body_px), 2)
-            pygame.draw.line(screen, (0, 0, 0), (cx_px, bottom_body_px), (cx_px, bottom_term_px), 2)
+            # Draw line
+            pygame.draw.line(screen, self.color.rgb, (cx_px, top_y), (cx_px, bottom_y), 2)
         else:
-            # Horizontal (default): terminals left/right, zig-zag along X
             left_x = px - half
             right_x = px + half
 
-            left_term_px = int(round(left_x - term_len))
-            left_body_px = int(round(left_x))
-            right_body_px = int(round(right_x))
-            right_term_px = int(round(right_x + term_len))
             cy_px = int(round(py))
 
-            # Draw terminals (horizontal lines)
-            pygame.draw.line(screen, (0, 0, 0), (left_term_px, cy_px), (left_body_px, cy_px), 2)
-            pygame.draw.line(screen, (0, 0, 0), (right_body_px, cy_px), (right_term_px, cy_px), 2)
+            # Draw line
+            pygame.draw.line(screen, self.color.rgb, (left_x, cy_px), (right_x, cy_px), 2)

@@ -1,10 +1,10 @@
 from components.base_component import Component
 import pygame
-from components.enums import Orientation
+from components.enums import Orientation, ComponentColors
 
 
 class Resistor(Component):
-    def __init__(self, name: str = "", n1: int = 0, n2: int = 0, x: int = 0, y: int = 0, orientation: Orientation = Orientation.E, resistance: float = 0):
+    def __init__(self, name: str = "", n1: int = 0, n2: int = 0, x: int = 0, y: int = 0, orientation: Orientation = Orientation.E, color:ComponentColors = ComponentColors.RED, resistance: float = 0):
         """Create a resistor.
 
         orientation must be an instance of components.enums.Orientation (N/E/S/W).
@@ -13,6 +13,7 @@ class Resistor(Component):
         """
         super().__init__(name, [n1, n2], x, y)
         self.resistance = resistance
+        self.color = color
         # Require Orientation enum (or int that maps to it)
         if isinstance(orientation, Orientation):
             self.orientation = orientation
