@@ -5,6 +5,7 @@ from components.resistor import Resistor
 from components.wire import Wire
 from components.enums import Orientation, ComponentColors
 from core.circuit import Circuit
+from components.base_component import Component
 
 class EventHandler:
     def __init__(self, circuit: Circuit):
@@ -65,7 +66,6 @@ class EventHandler:
             self.dragging = True
             self.drag_start = (x, y)
             return self._handle_wire_placement(x, y)
-            return True
             
         return False
     
@@ -73,13 +73,6 @@ class EventHandler:
         """Handle mouse button up events."""
         if event.button != pygame.BUTTON_LEFT:
             return False
-            
-        if self.dragging and self.drag_start and grid_coords:
-            end_x, end_y = grid_coords
-            start_x, start_y = self.drag_start
-            if self.current_tool == Tool.WIRE:
-                # TODO: Add wire creation logic
-                pass
             
         self.dragging = False
         self.drag_start = None
@@ -123,14 +116,26 @@ class EventHandler:
                 )
             )
         return True
-    
+
+    def _update_adjacent_wires(self, x: int, y: int):
+        """Update the adjacent components property of all neighboring wires."""
+        # Check all adjacent positions (N, E, S, W)
+        positions = [(x, y-1), (x+1, y), (x, y+1), (x-1, y)]
+        
+        # Update each neighboring wire's adjacent_components
+        for nx, ny in positions:
+            neighbor = self.circuit.components.get((nx, ny))
+            if isinstance(neighbor, Wire):
+                neighbor.adjacent_components = self.circuit.get_adjacent_components(nx, ny)
+
     def _handle_wire_placement(self, x: int, y: int) -> bool:
-        """Handle placing or removing a resistor."""
+        """Handle placing or removing a wire."""
         if isinstance(self.circuit.components.get((x,y)), Wire):
             self.circuit.remove_component(x, y)
+            self._update_adjacent_wires(x, y)
         else:
-            self.circuit.add_component(
-                Wire(
+            # Create and place the new wire
+            wire = Wire(
                     name="W1",  # TODO: Generate unique names
                     n1=0,
                     n2=1,
@@ -139,5 +144,10 @@ class EventHandler:
                     orientation=Orientation.E,
                     color=ComponentColors.RED
                 )
-            )
+            # Set its adjacent components
+            wire.adjacent_components = self.circuit.get_adjacent_components(x, y)
+            self.circuit.add_component(wire)
+            
+            # Update all neighboring wires
+            self._update_adjacent_wires(x, y)
         return True

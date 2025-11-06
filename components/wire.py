@@ -8,6 +8,20 @@ class Wire(Component):
         super().__init__(name, [n1, n2], x, y)
         self.orientation = orientation
         self.color = color
+        self._adjacent_components = (False, False, False, False)
+
+    @property
+    def adjacent_components(self):
+        return self._adjacent_components
+    
+    @adjacent_components.setter
+    def adjacent_components(self, adjacent_components:tuple[bool,bool,bool,bool] = (False, False, False, False)):
+        '''
+            Input is a tuple of 4 Booleans the layout being (N,E,S,W) true if there is a component in the polar coordinate
+        '''
+        if not isinstance(adjacent_components, tuple):
+            raise ValueError("adjacent_component should be of type tuple")
+        self._adjacent_components = adjacent_components
 
     def stamp(self, G, I):
         # Electrical stamping not implemented yet
@@ -21,30 +35,58 @@ class Wire(Component):
         """
         if screen is None:
             return
+        
+        neighbors = self.adjacent_components
 
         # Wire visual size: fit inside one cell but leave some padding
         body_w = min(cell_w, cell_h) * 0.7
         half = body_w / 2.0
+        
+        # Initialize all endpoints at center
+        top_y = py
+        bottom_y = py
+        left_x = px
+        right_x = px
+        
+        # Round center points for pixel-perfect drawing
+        center_x = int(round(px))
+        center_y = int(round(py))
 
-        ori = 'h'
-        if (self.orientation == Orientation.E or self.orientation == Orientation.W):
-            ori = 'h'
-        else:
-            ori = 'v'
-
-        if ori in ('v', 'vertical'):
+        # Extend lines based on neighbors (N,E,S,W)
+        # Vertical connections
+        if neighbors[0]:  # North neighbor
             top_y = py - half
+        if neighbors[2]:  # South neighbor
             bottom_y = py + half
-
-            cx_px = int(round(px))
-
-            # Draw line
-            pygame.draw.line(screen, self.color.rgb, (cx_px, top_y), (cx_px, bottom_y), 2)
-        else:
-            left_x = px - half
+            
+        # Horizontal connections
+        if neighbors[1]:  # East neighbor
             right_x = px + half
+        if neighbors[3]:  # West neighbor
+            left_x = px - half
 
-            cy_px = int(round(py))
+        pygame.draw.line(screen, self.color.rgb, (center_x - 1, top_y), (center_x - 1, bottom_y), 2)
+        pygame.draw.line(screen, self.color.rgb, (left_x, center_y - 1), (right_x, center_y - 1), 2)
+            
+        # ori = 'h'
+        # if (self.orientation == Orientation.E or self.orientation == Orientation.W):
+        #     ori = 'h'
+        # else:
+        #     ori = 'v'
 
-            # Draw line
-            pygame.draw.line(screen, self.color.rgb, (left_x, cy_px), (right_x, cy_px), 2)
+        # if ori in ('v', 'vertical'):
+        #     top_y = py - half
+        #     bottom_y = py + half
+
+        #     cx_px = int(round(px))
+
+        #     # Draw line
+        #     pygame.draw.line(screen, self.color.rgb, (cx_px, top_y), (cx_px, bottom_y), 2)
+        # else:
+        #     left_x = px - half
+        #     right_x = px + half
+
+        #     cy_px = int(round(py))
+
+        #     # Draw line
+        #     pygame.draw.line(screen, self.color.rgb, (left_x, cy_px), (right_x, cy_px), 2)
