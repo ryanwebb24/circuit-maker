@@ -24,6 +24,7 @@ class Button:
     def __init__(
         self,
         rect: Tuple[int, int, int, int],
+        button_id: str,
         text: str,
         on_click: Optional[Callable] = None,
         font: Optional[pygame.font.Font] = None,
@@ -33,6 +34,7 @@ class Button:
         if pygame.get_init() is False:
             pygame.init()
 
+        self.button_id = button_id
         self.rect = pygame.Rect(rect)
         self.text = text
         self.on_click = on_click

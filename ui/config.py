@@ -43,3 +43,4 @@ class ButtonConfig:
 class Tool(Enum):
     WIRE = "WIRE"
     RESISTOR = "RESISTOR"
+    POWER_SUPPLY = "POWER_SUPPLY"

@@ -29,6 +29,8 @@ class Renderer:
         # Initialize renderers
         self.grid_renderer = GridRenderer(self.screen, circuit)
         self.component_renderer = ComponentRenderer(self.screen, circuit, self.grid_renderer)
+
+        self.tool_buttons = []
         
         self.border = WindowConfig.BORDER
         
@@ -42,22 +44,22 @@ class Renderer:
         spacing = ButtonConfig.SPACING
         
         # Create wire button (top button)
-        btn_x = int(round(self.width - padding - btn_w))
+        btn_x = int(round(padding))
         btn_y = int(round(padding))
-        self.wire_button = Button(
-            (btn_x, btn_y, btn_w, btn_h),
-            "Wire",
-            on_click=self._on_add_wire,
-            selected=True  # Wire is the default tool
-        )
+
         
-        # Create resistor button (below wire button)
-        btn_y += btn_h + spacing
-        self.resistor_button = Button(
-            (btn_x, btn_y, btn_w, btn_h),
-            "Resistor",
-            on_click=self._on_add_resistor
-        )
+        # Add ui buttons
+        for tool in Tool:
+            # Create lambda with tool parameter bound at creation time
+            onclick = lambda t=tool: self._on_add_component(t)
+            self.tool_buttons.append(Button(
+                (btn_x, btn_y, btn_w, btn_h),
+                tool.name,
+                " ".join(word.capitalize() for word in tool.name.split("_")),
+                on_click=onclick,
+                selected=tool.value == "WIRE"  # Wire is the default tool
+            ))
+            btn_x += btn_w + spacing
         
         # Update button states to match default tool
         self._update_tool_buttons()
@@ -65,25 +67,23 @@ class Renderer:
     def _handle_ui_events(self, event):
         """Handle UI-related events."""
         try:
-            self.wire_button.handle_event(event)
-            self.resistor_button.handle_event(event)
+            for button in self.tool_buttons:
+                button.handle_event(event)
+
         except Exception as e:
             print(f"Error handling UI event: {e}")
 
     def _update_tool_buttons(self):
         """Update button states to match current tool."""
         current_tool = self.event_handler.current_tool
-        self.wire_button.set_selected(current_tool == Tool.WIRE)
-        self.resistor_button.set_selected(current_tool == Tool.RESISTOR)
+        print(current_tool)
+        for button in self.tool_buttons:
+            button.set_selected(current_tool.name == button.button_id)
 
-    def _on_add_wire(self):
-        """Callback when the wire button is clicked."""
-        self.event_handler.set_current_tool(Tool.WIRE)
-        self._update_tool_buttons()
 
-    def _on_add_resistor(self):
-        """Callback when the resistor button is clicked."""
-        self.event_handler.set_current_tool(Tool.RESISTOR)
+    def _on_add_component(self, tool:Tool = Tool.WIRE):
+        """Callback when a component button is clicked"""
+        self.event_handler.set_current_tool(tool)
         self._update_tool_buttons()
 
     def _on_quit(self):
@@ -109,14 +109,11 @@ class Renderer:
         """Update and draw UI elements."""
         try:
             mouse_pos = pygame.mouse.get_pos()
-            
-            # Update and draw wire button
-            self.wire_button.update(mouse_pos)
-            self.wire_button.draw(self.screen)
-            
-            # Update and draw resistor button
-            self.resistor_button.update(mouse_pos)
-            self.resistor_button.draw(self.screen)
+
+            for button in self.tool_buttons:
+                button.update(mouse_pos)
+                button.draw(self.screen)
+
         except Exception as e:
             print(f"Error updating UI: {e}")
 
