@@ -4,8 +4,8 @@ from components.enums import Orientation, ComponentColors
 
 class PowerSupply(Component):
     def __init__(self, name: str = "", n1: int = 0, n2: int = 0, x: int = 0, y: int = 0, 
-                 orientation: Orientation = Orientation.E, voltage: float = 0, 
-                 color: ComponentColors = ComponentColors.RED):
+                 orientation: Orientation = Orientation.E, 
+                 color: ComponentColors = ComponentColors.RED, voltage: float = 0):
         """Create a voltage source (power supply).
         
         Args:

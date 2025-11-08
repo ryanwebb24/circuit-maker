@@ -3,11 +3,29 @@ from typing import Callable, Dict, Optional
 from ui.config import Tool
 from components.resistor import Resistor
 from components.wire import Wire
+from components.power_supply import PowerSupply
+from components.ground import Ground
 from components.enums import Orientation, ComponentColors
 from core.circuit import Circuit
 from components.base_component import Component
 
 class EventHandler:
+    # Map each tool to its corresponding component class
+    TOOL_TO_COMPONENT = {
+        Tool.WIRE: Wire,
+        Tool.RESISTOR: Resistor,
+        Tool.POWER_SUPPLY: PowerSupply,
+        Tool.GROUND: Ground
+    }
+
+    # Default parameters for each component type
+    COMPONENT_DEFAULTS = {
+        Tool.WIRE: {"name": "W1", "n1": 0, "n2": 1, "orientation": Orientation.E, "color": ComponentColors.RED},
+        Tool.RESISTOR: {"name": "R1", "n1": 0, "n2": 1, "orientation": Orientation.E, "color": ComponentColors.RED, "resistance": 100.0},
+        Tool.POWER_SUPPLY: {"name": "P1", "n1": 0, "n2": 1, "orientation": Orientation.E, "color": ComponentColors.RED, "voltage": 15},
+        Tool.GROUND: {"name": "G1", "n1": 0, "orientation": Orientation.E, "color": ComponentColors.RED}
+    }
+
     def __init__(self, circuit: Circuit):
         """Initialize the event handler.
         
@@ -59,15 +77,10 @@ class EventHandler:
             return False
             
         x, y = grid_coords
+        self.dragging = True
+        self.drag_start = (x, y)
         
-        if self.current_tool == Tool.RESISTOR:
-            return self._handle_resistor_placement(x, y)
-        elif self.current_tool == Tool.WIRE:
-            self.dragging = True
-            self.drag_start = (x, y)
-            return self._handle_wire_placement(x, y)
-            
-        return False
+        return self._handle_component_placement(x, y, self.current_tool)
     
     def _handle_mouse_up(self, event: pygame.event.Event, grid_coords: Optional[tuple]) -> bool:
         """Handle mouse button up events."""
@@ -98,24 +111,24 @@ class EventHandler:
             self.on_quit()
         return True
     
-    def _handle_resistor_placement(self, x: int, y: int) -> bool:
-        """Handle placing or removing a resistor."""
-        if isinstance(self.circuit.components.get((x,y)), Resistor):
-            self.circuit.remove_component(x, y)
-        else:
-            self.circuit.add_component(
-                Resistor(
-                    name="R1",  # TODO: Generate unique names
-                    n1=0,
-                    n2=1,
-                    x=x,
-                    y=y,
-                    orientation=Orientation.E,
-                    color=ComponentColors.RED,
-                    resistance=100.0
-                )
-            )
-        return True
+    # def _handle_resistor_placement(self, x: int, y: int) -> bool:
+    #     """Handle placing or removing a resistor."""
+    #     if isinstance(self.circuit.components.get((x,y)), Resistor):
+    #         self.circuit.remove_component(x, y)
+    #     else:
+    #         self.circuit.add_component(
+    #             Resistor(
+    #                 name="R1",  # TODO: Generate unique names
+    #                 n1=0,
+    #                 n2=1,
+    #                 x=x,
+    #                 y=y,
+    #                 orientation=Orientation.E,
+    #                 color=ComponentColors.RED,
+    #                 resistance=100.0
+    #             )
+    #         )
+    #     return True
 
     def _update_adjacent_wires(self, x: int, y: int):
         """Update the adjacent components property of all neighboring wires."""
@@ -128,26 +141,82 @@ class EventHandler:
             if isinstance(neighbor, Wire):
                 neighbor.adjacent_components = self.circuit.get_adjacent_components(nx, ny)
 
-    def _handle_wire_placement(self, x: int, y: int) -> bool:
-        """Handle placing or removing a wire."""
-        if isinstance(self.circuit.components.get((x,y)), Wire):
+    # def _handle_wire_placement(self, x: int, y: int) -> bool:
+    #     """Handle placing or removing a wire."""
+    #     if isinstance(self.circuit.components.get((x,y)), Wire):
+    #         self.circuit.remove_component(x, y)
+    #         self._update_adjacent_wires(x, y)
+    #     else:
+    #         # Create and place the new wire
+    #         wire = Wire(
+    #                 name="W1",  # TODO: Generate unique names
+    #                 n1=0,
+    #                 n2=1,
+    #                 x=x,
+    #                 y=y,
+    #                 orientation=Orientation.E,
+    #                 color=ComponentColors.RED
+    #             )
+    #         # Set its adjacent components
+    #         wire.adjacent_components = self.circuit.get_adjacent_components(x, y)
+    #         self.circuit.add_component(wire)
+            
+    #         # Update all neighboring wires
+    #         self._update_adjacent_wires(x, y)
+    #     return True
+    
+    # def _handle_power_supply_placement(self, x: int, y:int) -> bool:
+    #     """Handle placing or removing a power supply."""
+    #     if isinstance(self.circuit.components.get((x,y)), PowerSupply):
+    #         self.circuit.remove_component(x, y)
+    #         self._update_adjacent_wires(x, y)
+    #     else:
+    #         # Create and place the new wire
+    #         power_supply = PowerSupply(
+    #                 name="P1",  # TODO: Generate unique names
+    #                 n1=0,
+    #                 n2=1,
+    #                 x=x,
+    #                 y=y,
+    #                 orientation=Orientation.E,
+    #                 color=ComponentColors.RED,
+    #                 voltage=15
+    #             )
+    #         self.circuit.add_component(power_supply)
+    #         self._update_adjacent_wires(x, y)
+    #     return True
+    
+    def _handle_component_placement(self, x: int, y: int, tool: Tool = Tool.WIRE) -> bool:
+        """Handle placing or removing a component.
+        
+        Args:
+            x: Grid x coordinate
+            y: Grid y coordinate
+            tool: The tool type being used (corresponds to component type)
+            
+        Returns:
+            True if the component was placed/removed, False otherwise
+        """
+        # Get the component class for this tool
+        component_class = self.TOOL_TO_COMPONENT.get(tool)
+        if not component_class:
+            return False
+            
+        # Check if there's already a component of this type at the location
+        current_component = self.circuit.components.get((x, y))
+        if isinstance(current_component, component_class):
             self.circuit.remove_component(x, y)
             self._update_adjacent_wires(x, y)
         else:
-            # Create and place the new wire
-            wire = Wire(
-                    name="W1",  # TODO: Generate unique names
-                    n1=0,
-                    n2=1,
-                    x=x,
-                    y=y,
-                    orientation=Orientation.E,
-                    color=ComponentColors.RED
-                )
-            # Set its adjacent components
-            wire.adjacent_components = self.circuit.get_adjacent_components(x, y)
-            self.circuit.add_component(wire)
+            params = self.COMPONENT_DEFAULTS.get(tool, {}).copy()
+            params.update({"x": x, "y": y})
             
-            # Update all neighboring wires
+            component = component_class(**params)
+            
+            if isinstance(component, Wire):
+                component.adjacent_components = self.circuit.get_adjacent_components(x, y)
+                
+            self.circuit.add_component(component)
             self._update_adjacent_wires(x, y)
+            
         return True
