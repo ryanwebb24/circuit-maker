@@ -20,10 +20,10 @@ class EventHandler:
 
     # Default parameters for each component type
     COMPONENT_DEFAULTS = {
-        Tool.WIRE: {"name": "W1", "n1": 0, "n2": 1, "orientation": Orientation.E, "color": ComponentColors.RED},
-        Tool.RESISTOR: {"name": "R1", "n1": 0, "n2": 1, "orientation": Orientation.E, "color": ComponentColors.RED, "resistance": 100.0},
-        Tool.POWER_SUPPLY: {"name": "P1", "n1": 0, "n2": 1, "orientation": Orientation.E, "color": ComponentColors.RED, "voltage": 15},
-        Tool.GROUND: {"name": "G1", "n1": 0, "orientation": Orientation.E, "color": ComponentColors.RED}
+        Tool.WIRE: {"name": "W1", "orientation": Orientation.E, "color": ComponentColors.RED},
+        Tool.RESISTOR: {"name": "R1", "orientation": Orientation.E, "color": ComponentColors.RED, "resistance": 100.0},
+        Tool.POWER_SUPPLY: {"name": "P1", "orientation": Orientation.E, "color": ComponentColors.RED, "voltage": 15},
+        Tool.GROUND: {"name": "GND", "orientation": Orientation.S, "color": ComponentColors.BLUE}
     }
 
     def __init__(self, circuit: Circuit):
@@ -34,6 +34,8 @@ class EventHandler:
         """
         self.circuit = circuit
         self.current_tool = Tool.WIRE
+        self.next_node = 1  # Track the next available node number
+        self.node_map = {}  # Map (x,y) coordinates to node numbers
         self.handlers: Dict[int, Callable] = {
             pygame.MOUSEBUTTONDOWN: self._handle_mouse_down,
             pygame.MOUSEBUTTONUP: self._handle_mouse_up,
@@ -186,6 +188,15 @@ class EventHandler:
     #         self._update_adjacent_wires(x, y)
     #     return True
     
+    def _get_node_number(self, x: int, y: int) -> int:
+        """Get a node number for a position, creating a new one if needed."""
+        pos = (x, y)
+        if pos not in self.node_map:
+            self.node_map[pos] = self.next_node
+            print(f"Assigning new node {self.next_node} at position {pos}")
+            self.next_node += 1
+        return self.node_map[pos]
+
     def _handle_component_placement(self, x: int, y: int, tool: Tool = Tool.WIRE) -> bool:
         """Handle placing or removing a component.
         
@@ -208,9 +219,23 @@ class EventHandler:
             self.circuit.remove_component(x, y)
             self._update_adjacent_wires(x, y)
         else:
+            # Get base parameters for this component type
             params = self.COMPONENT_DEFAULTS.get(tool, {}).copy()
             params.update({"x": x, "y": y})
             
+            # Assign node numbers based on position
+            n1 = self._get_node_number(x, y)
+            n2 = self._get_node_number(x + 1, y)  # Next node to the right
+            
+            # Handle special cases for different components
+            if tool == Tool.POWER_SUPPLY:
+                params.update({"n1": n1, "n2": 0})  # Ground the negative terminal
+            elif tool == Tool.GROUND:
+                params.update({"n1": n1})  # Ground needs only one node
+            else:
+                params.update({"n1": n1, "n2": n2})
+            
+            # Create and configure the component
             component = component_class(**params)
             
             if isinstance(component, Wire):

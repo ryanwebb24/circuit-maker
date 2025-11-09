@@ -8,6 +8,8 @@ from ui.component_renderer import ComponentRenderer
 from ui.event_handler import EventHandler
 from components.resistor import Resistor
 from components.enums import Orientation, ComponentColors
+from core.solver import CircuitSolver
+from ui.circuit_visualizer import CircuitVisualizer
 
 class Renderer:
     def __init__(self, circuit, width=WindowConfig.DEFAULT_WIDTH, height=WindowConfig.DEFAULT_HEIGHT):
@@ -29,6 +31,12 @@ class Renderer:
         # Initialize renderers
         self.grid_renderer = GridRenderer(self.screen, circuit)
         self.component_renderer = ComponentRenderer(self.screen, circuit, self.grid_renderer)
+        self.circuit_visualizer = CircuitVisualizer(self.screen, self.grid_renderer)
+        self.circuit_solver = CircuitSolver()
+
+        # Circuit analysis results
+        self.node_voltages = {}
+        self.component_currents = {}
 
         self.tool_buttons = []
         
@@ -117,6 +125,33 @@ class Renderer:
         except Exception as e:
             print(f"Error updating UI: {e}")
 
+    def solve_circuit(self):
+        """Solve the circuit and update visualization values."""
+        try:
+            # Get list of components
+            components = list(self.circuit.components.values())
+            if not components:
+                self.node_voltages = {}
+                self.component_currents = {}
+                return
+
+            # Solve the circuit
+            self.node_voltages = self.circuit_solver.solve(components)
+            self.component_currents = self.circuit_solver.calculate_currents(self.node_voltages)
+            
+            # Update visualizer
+            self.circuit_visualizer.set_values(self.node_voltages, self.component_currents)
+            
+            print("Node voltages:", self.node_voltages)
+            print("Component currents:", self.component_currents)
+            
+        except ValueError as e:
+            import traceback
+            print(f"Circuit solving error: {e}")
+            traceback.print_exc()
+            self.node_voltages = {}
+            self.component_currents = {}
+
     def update(self):
         """Update and render the game state."""
         # Maintain frame rate
@@ -128,6 +163,15 @@ class Renderer:
         # Draw circuit elements
         self.grid_renderer.draw()
         self.component_renderer.draw()
+        
+        # Solve and visualize circuit
+        self.solve_circuit()
+        
+        # Update hover state for visualization
+        mouse_pos = pygame.mouse.get_pos()
+        components = list(self.circuit.components.values())
+        self.circuit_visualizer.update_hover(mouse_pos, components)
+        self.circuit_visualizer.draw(components)
         
         # Update UI
         self._update_ui()

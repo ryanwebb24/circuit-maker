@@ -25,8 +25,68 @@ class Resistor(Component):
                 raise TypeError("orientation must be a components.enums.Orientation")
 
     def stamp(self, G, I):
-        # Electrical stamping not implemented yet
-        pass
+        """
+        Stamp the resistor's contribution into the circuit matrices.
+        For a resistor between nodes n1 and n2:
+        - Add conductance (1/R) to diagonal elements G[n1][n1] and G[n2][n2]
+        - Subtract conductance from off-diagonal elements G[n1][n2] and G[n2][n1]
+        
+        Args:
+            G: Conductance matrix to stamp into
+            I: Current vector (resistors don't contribute to I directly)
+        """
+        if self.resistance == 0:  # Handle short circuit case
+            return
+            
+        # Get the nodes this resistor connects
+        n1, n2 = self.nodes
+        
+        # Calculate conductance (1/R)
+        g = 1.0 / self.resistance
+        
+        # Add conductance to diagonal elements
+        if n1 >= 0:  # If node 1 is not ground
+            G[n1][n1] += g
+        if n2 >= 0:  # If node 2 is not ground
+            G[n2][n2] += g
+            
+        # Add negative conductance to off-diagonal elements
+        if n1 >= 0 and n2 >= 0:  # If neither node is ground
+            G[n1][n2] -= g
+            G[n2][n1] -= g  # Matrix must be symmetric
+            
+    def calculate_current(self, v1: float, v2: float) -> float:
+        """
+        Calculate the current through the resistor using Ohm's Law: I = V/R
+        Positive current flows from node 1 to node 2.
+        
+        Args:
+            v1: Voltage at node 1
+            v2: Voltage at node 2
+            
+        Returns:
+            Current through the resistor in amperes
+        """
+        if self.resistance == 0:
+            return 0.0  # Avoid division by zero
+        return (v1 - v2) / self.resistance
+            
+        # Get the nodes this resistor connects
+        n1, n2 = self.nodes
+        
+        # Calculate conductance (1/R)
+        g = 1.0 / self.resistance
+        
+        # Add conductance to diagonal elements
+        if n1 >= 0:  # If node 1 is not ground
+            G[n1][n1] += g
+        if n2 >= 0:  # If node 2 is not ground
+            G[n2][n2] += g
+            
+        # Add negative conductance to off-diagonal elements
+        if n1 >= 0 and n2 >= 0:  # If neither node is ground
+            G[n1][n2] -= g
+            G[n2][n1] -= g  # Matrix must be symmetric
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
         """

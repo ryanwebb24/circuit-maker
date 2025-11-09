@@ -9,6 +9,20 @@ class Component(ABC):
         self.x = x
         self.y = y
         self.orientation = orientation
+        
+    def calculate_current(self, v1: float, v2: float) -> float:
+        """
+        Calculate the current through this component given node voltages.
+        Positive current flows from node 1 to node 2.
+        
+        Args:
+            v1: Voltage at node 1
+            v2: Voltage at node 2 (if applicable)
+            
+        Returns:
+            Current through the component in amperes
+        """
+        return 0.0  # Default implementation returns no current
 
     @abstractmethod
     def stamp(self, G, I):

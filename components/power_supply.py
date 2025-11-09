@@ -34,9 +34,9 @@ class PowerSupply(Component):
     def stamp(self, G, I):
         """
         Stamp the voltage source contribution into the circuit matrices.
-        For a voltage source:
-        - Add 1/-1 to the conductance matrix for voltage relationship
-        - Add the voltage value to the current vector
+        For a voltage source between nodes n1 and n2:
+        - Add very large conductance from n1 to ground
+        - Add voltage value to n1's current term
         
         Args:
             G: Conductance matrix to stamp into
@@ -44,17 +44,28 @@ class PowerSupply(Component):
         """
         n1, n2 = self.nodes
         
-        # Add voltage source contribution
+        # Use large conductance to set n1 to voltage value
         if n1 >= 0:
-            G[n1][n1] += 1
-        if n2 >= 0:
-            G[n2][n2] += 1
+            g = 1e6  # Large conductance
+            G[n1][n1] += g
+            I[n1] += g * self.voltage  # KCL: I = G * V
+            
+    def calculate_current(self, v1: float, v2: float) -> float:
+        """
+        Calculate the current through the voltage source.
+        For an ideal voltage source, current is determined by the circuit.
+        This will be calculated after solving the circuit equations.
         
-        # Add voltage value to current vector
-        if n1 >= 0:
-            I[n1] += self.voltage
-        if n2 >= 0:
-            I[n2] -= self.voltage
+        Args:
+            v1: Voltage at positive terminal
+            v2: Voltage at negative terminal
+            
+        Returns:
+            Current through the voltage source in amperes
+        """
+        # For voltage source, current is voltage difference times large conductance
+        g = 1e6  # Same conductance used in stamp()
+        return g * (self.voltage - v1)
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
         """
