@@ -33,28 +33,23 @@ class PowerSupply(Component):
 
     def stamp(self, G, I):
         """
-        Stamp the voltage source contribution into the circuit matrices.
-        For a voltage source between nodes n1 and n2:
-        - Add very large conductance from n1 to ground
-        - Add voltage value to n1's current term
+        Stamp method for voltage source - handled by MNA solver.
+        This method is kept for interface compatibility but the actual
+        stamping is done by the solver's _stamp_voltage_source method.
         
         Args:
-            G: Conductance matrix to stamp into
-            I: Current vector to stamp into
+            G: Conductance matrix (not used for voltage sources in proper MNA)
+            I: Current vector (not used for voltage sources in proper MNA)
         """
-        n1, n2 = self.nodes
-        
-        # Use large conductance to set n1 to voltage value
-        if n1 >= 0:
-            g = 1e6  # Large conductance
-            G[n1][n1] += g
-            I[n1] += g * self.voltage  # KCL: I = G * V
+        # Voltage sources are handled by the MNA solver directly
+        # This method exists for interface compatibility
+        pass
             
     def calculate_current(self, v1: float, v2: float) -> float:
         """
         Calculate the current through the voltage source.
-        For an ideal voltage source, current is determined by the circuit.
-        This will be calculated after solving the circuit equations.
+        For voltage sources in MNA, the current is determined by the circuit
+        and is available from the solver after solving.
         
         Args:
             v1: Voltage at positive terminal
@@ -63,9 +58,11 @@ class PowerSupply(Component):
         Returns:
             Current through the voltage source in amperes
         """
-        # For voltage source, current is voltage difference times large conductance
-        g = 1e6  # Same conductance used in stamp()
-        return g * (self.voltage - v1)
+        # The current through a voltage source is determined by the circuit
+        # and would be calculated by the solver. For now, return 0.
+        # In a complete implementation, this would access the current from
+        # the solved system.
+        return 0.0
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
         """

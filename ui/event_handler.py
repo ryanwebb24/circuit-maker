@@ -229,10 +229,15 @@ class EventHandler:
             
             # Handle special cases for different components
             if tool == Tool.POWER_SUPPLY:
-                params.update({"n1": n1, "n2": 0})  # Ground the negative terminal
+                # PowerSupply: positive terminal to the right, negative to the left (adjacent position)
+                n_pos = self._get_node_number(x + 1, y)  # positive terminal (right)
+                n_neg = self._get_node_number(x - 1, y)  # negative terminal (left, to connect with Ground)
+                params.update({"n1": n_pos, "n2": n_neg})
             elif tool == Tool.GROUND:
-                params.update({"n1": n1})  # Ground needs only one node
+                # Ground connects to its own position 
+                params.update({"n1": n1})
             else:
+                # Other components use left and right positions
                 params.update({"n1": n1, "n2": n2})
             
             # Create and configure the component

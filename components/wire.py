@@ -25,34 +25,17 @@ class Wire(Component):
 
     def stamp(self, G, I):
         """
-        Stamp the wire's contribution into the circuit matrices.
-        A wire is a perfect conductor (resistance = 0).
-        We implement this using a very large conductance between nodes.
+        Stamp method for wire - handled by MNA solver.
+        This method is kept for interface compatibility but the actual
+        stamping is done by the solver's _stamp_passive_component method.
         
         Args:
-            G: Conductance matrix to stamp into
-            I: Current vector (wires don't contribute to I directly)
+            G: Conductance matrix
+            I: Current vector
         """
-        # Get the nodes this wire connects
-        n1, n2 = self.nodes
-        
-        # If either node is ground or nodes are the same, nothing to do
-        if n1 == n2 or n1 < 0 or n2 < 0:
-            return
-
-        # Use very large conductance to simulate perfect conductor
-        g = 1e6
-        
-        # Add conductance between nodes
-        if n1 >= 0:
-            G[n1][n1] += g
-        if n2 >= 0:
-            G[n2][n2] += g
-            
-        # Coupling terms (negative conductance)
-        if n1 >= 0 and n2 >= 0:
-            G[n1][n2] -= g
-            G[n2][n1] -= g  # Keep matrix symmetric
+        # Wire stamping is handled by the MNA solver's _stamp_passive_component method
+        # This method exists for interface compatibility
+        pass
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
         """

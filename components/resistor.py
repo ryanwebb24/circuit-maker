@@ -70,23 +70,6 @@ class Resistor(Component):
         if self.resistance == 0:
             return 0.0  # Avoid division by zero
         return (v1 - v2) / self.resistance
-            
-        # Get the nodes this resistor connects
-        n1, n2 = self.nodes
-        
-        # Calculate conductance (1/R)
-        g = 1.0 / self.resistance
-        
-        # Add conductance to diagonal elements
-        if n1 >= 0:  # If node 1 is not ground
-            G[n1][n1] += g
-        if n2 >= 0:  # If node 2 is not ground
-            G[n2][n2] += g
-            
-        # Add negative conductance to off-diagonal elements
-        if n1 >= 0 and n2 >= 0:  # If neither node is ground
-            G[n1][n2] -= g
-            G[n2][n1] -= g  # Matrix must be symmetric
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
         """

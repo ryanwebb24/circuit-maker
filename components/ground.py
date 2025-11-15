@@ -31,19 +31,17 @@ class Ground(Component):
 
     def stamp(self, G, I):
         """
-        Stamp the ground connection into the circuit matrices.
-        Ground node is treated as 0V reference point.
+        Stamp method for ground connection - handled by MNA solver.
+        This method is kept for interface compatibility but the actual
+        ground handling is done by the solver's _handle_ground_connections method.
         
         Args:
-            G: Conductance matrix to stamp into
-            I: Current vector to stamp into
+            G: Conductance matrix (ground handling done by solver)
+            I: Current vector (ground handling done by solver)
         """
-        n1 = self.nodes[0]
-        
-        # Ground node forces voltage to 0V
-        if n1 >= 0:
-            G[n1][n1] += 1e6  # Large conductance to force node to ground
-            I[n1] += 0  # Ground is 0V
+        # Ground connections are handled by the MNA solver directly
+        # This method exists for interface compatibility
+        pass
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
         """
