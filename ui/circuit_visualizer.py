@@ -41,42 +41,166 @@ class CircuitVisualizer:
                 break
         
     def draw_voltage_labels(self, components: list[Component]):
-        """Draw voltage values near the hovered component's nodes."""
-        if not self.voltage_values or not self.hovered_component:
+        """Draw comprehensive component information for the hovered component."""
+        if not self.hovered_component:
             return
             
-        # Only draw voltage labels for the hovered component
         component = self.hovered_component
         
         # Get grid position of component
         px, py = self.grid_renderer.grid_to_pixel(component.x, component.y)
         
-        # Draw voltage label for each node of the hovered component
-        offset_y = -20  # Start above the component
-        for node in component.nodes:
-            if node not in self.voltage_values:
-                continue
-                
-            voltage = self.voltage_values[node]
-            label = f"Node {node}: {voltage:.2f}V"
+        # Collect all information to display
+        info_lines = []
+        
+        # Component name and type
+        info_lines.append(f"{component.name} ({type(component).__name__})")
+        
+        # Node voltages
+        for i, node in enumerate(component.nodes):
+            if node in self.voltage_values:
+                voltage = self.voltage_values[node]
+                terminal_name = self._get_terminal_name(component, i)
+                info_lines.append(f"{terminal_name}: {voltage:.3f}V")
+        
+        # Current through component
+        if component.name in self.current_values:
+            current = self.current_values[component.name]
+            current_ma = current * 1000  # Convert to mA
+            if abs(current_ma) >= 1:
+                info_lines.append(f"Current: {current_ma:.2f}mA")
+            else:
+                info_lines.append(f"Current: {current*1000000:.2f}µA")
+        
+        # Component-specific information
+        component_info = self._get_component_specific_info(component)
+        info_lines.extend(component_info)
+        
+        # Calculate power if we have voltage and current
+        if hasattr(component, 'nodes') and len(component.nodes) >= 2 and component.name in self.current_values:
+            power = self._calculate_power(component)
+            if power is not None:
+                if abs(power) >= 0.001:  # >= 1mW
+                    info_lines.append(f"Power: {power*1000:.2f}mW")
+                else:
+                    info_lines.append(f"Power: {power*1000000:.2f}µW")
+        
+        # Draw the information box
+        self._draw_info_box(info_lines, px, py)
+    
+    def _get_terminal_name(self, component, terminal_index: int) -> str:
+        """Get a descriptive name for the component terminal."""
+        from components.power_supply import PowerSupply
+        from components.ground import Ground
+        from components.resistor import Resistor
+        from components.wire import Wire
+        
+        if isinstance(component, PowerSupply):
+            return "Positive" if terminal_index == 0 else "Negative"
+        elif isinstance(component, Ground):
+            return "Ground"
+        elif isinstance(component, Resistor):
+            return "Left" if terminal_index == 0 else "Right"
+        elif isinstance(component, Wire):
+            return "Terminal A" if terminal_index == 0 else "Terminal B"
+        else:
+            return f"Terminal {terminal_index + 1}"
+    
+    def _get_component_specific_info(self, component) -> list[str]:
+        """Get component-specific information to display."""
+        from components.power_supply import PowerSupply
+        from components.resistor import Resistor
+        
+        info = []
+        
+        if isinstance(component, PowerSupply):
+            info.append(f"Voltage Source: {component.voltage}V")
             
-            # Render voltage text
-            text = self.font.render(label, True, Colors.BLACK)
-            text_rect = text.get_rect()
+        elif isinstance(component, Resistor):
+            info.append(f"Resistance: {component.resistance}Ω")
             
-            # Position the text above the component, stacked if multiple nodes
-            text_rect.centerx = px
-            text_rect.bottom = py + offset_y
-            offset_y -= 20  # Move up for next label
+            # Calculate voltage drop across resistor
+            if len(component.nodes) >= 2:
+                v1 = self.voltage_values.get(component.nodes[0], 0)
+                v2 = self.voltage_values.get(component.nodes[1], 0)
+                voltage_drop = abs(v1 - v2)
+                info.append(f"Voltage Drop: {voltage_drop:.3f}V")
+        
+        return info
+    
+    def _calculate_power(self, component) -> float | None:
+        """Calculate power dissipated/supplied by the component."""
+        if component.name not in self.current_values:
+            return None
             
-            # Draw a white background for better visibility
-            padding = 2
-            background_rect = text_rect.inflate(padding * 2, padding * 2)
-            pygame.draw.rect(self.screen, Colors.WHITE, background_rect)
-            pygame.draw.rect(self.screen, Colors.BLACK, background_rect, 1)
+        current = self.current_values[component.name]
+        
+        from components.power_supply import PowerSupply
+        from components.resistor import Resistor
+        
+        if isinstance(component, PowerSupply):
+            # Power supplied by voltage source: P = V * I
+            return component.voltage * current
             
-            # Draw the text
-            self.screen.blit(text, text_rect)
+        elif isinstance(component, Resistor):
+            # Power dissipated by resistor: P = I^2 * R
+            return current * current * component.resistance
+            
+        elif len(component.nodes) >= 2:
+            # General case: P = V * I (voltage difference times current)
+            v1 = self.voltage_values.get(component.nodes[0], 0)
+            v2 = self.voltage_values.get(component.nodes[1], 0)
+            voltage_diff = v1 - v2
+            return voltage_diff * current
+            
+        return None
+    
+    def _draw_info_box(self, info_lines: list[str], px: float, py: float):
+        """Draw an information box with the given lines of text."""
+        if not info_lines:
+            return
+            
+        # Calculate box dimensions
+        line_height = 18
+        padding = 6
+        max_width = 0
+        
+        # Render all text to find maximum width
+        rendered_lines = []
+        for line in info_lines:
+            text_surface = self.font.render(line, True, Colors.BLACK)
+            rendered_lines.append(text_surface)
+            max_width = max(max_width, text_surface.get_width())
+        
+        # Box dimensions
+        box_width = max_width + 2 * padding
+        box_height = len(info_lines) * line_height + 2 * padding
+        
+        # Position box above component, but keep it on screen
+        box_x = px - box_width // 2
+        box_y = py - box_height - 20  # 20 pixels above component
+        
+        # Keep box within screen bounds
+        screen_rect = self.screen.get_rect()
+        if box_x < 0:
+            box_x = 0
+        elif box_x + box_width > screen_rect.width:
+            box_x = screen_rect.width - box_width
+            
+        if box_y < 0:
+            box_y = py + 20  # Move below component if no room above
+        
+        # Draw background box
+        box_rect = pygame.Rect(box_x, box_y, box_width, box_height)
+        pygame.draw.rect(self.screen, Colors.WHITE, box_rect)
+        pygame.draw.rect(self.screen, Colors.BLACK, box_rect, 2)
+        
+        # Draw text lines
+        text_y = box_y + padding
+        for text_surface in rendered_lines:
+            text_x = box_x + padding
+            self.screen.blit(text_surface, (text_x, text_y))
+            text_y += line_height
                 
     def draw_current_arrows(self, components: list[Component]):
         """Draw current arrows and values near components."""
