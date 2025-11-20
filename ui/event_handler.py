@@ -190,6 +190,10 @@ class EventHandler:
     
     def _get_node_number(self, x: int, y: int) -> int:
         """Get a node number for a position, creating a new one if needed."""
+        # Don't create nodes at negative positions - return ground (0)
+        if x < 0 or y < 0:
+            return 0
+            
         pos = (x, y)
         if pos not in self.node_map:
             self.node_map[pos] = self.next_node
@@ -223,22 +227,33 @@ class EventHandler:
             params = self.COMPONENT_DEFAULTS.get(tool, {}).copy()
             params.update({"x": x, "y": y})
             
-            # Assign node numbers based on position
-            n1 = self._get_node_number(x, y)
-            n2 = self._get_node_number(x + 1, y)  # Next node to the right
-            
-            # Handle special cases for different components
+            # Assign node numbers based on component terminals and adjacent positions
             if tool == Tool.POWER_SUPPLY:
-                # PowerSupply: positive terminal to the right, negative to the left (adjacent position)
-                n_pos = self._get_node_number(x + 1, y)  # positive terminal (right)
-                n_neg = self._get_node_number(x - 1, y)  # negative terminal (left, to connect with Ground)
-                params.update({"n1": n_pos, "n2": n_neg})
+                # PowerSupply: positive terminal at component position, negative at ground (node 0)
+                n_pos = self._get_node_number(x, y)  # positive terminal at component position
+                params.update({"n1": n_pos, "n2": 0})  # negative terminal to ground
             elif tool == Tool.GROUND:
-                # Ground connects to its own position 
+                # Ground connects the component position to ground (node 0)
+                n1 = self._get_node_number(x, y)
                 params.update({"n1": n1})
-            else:
-                # Other components use left and right positions
+            elif tool == Tool.RESISTOR:
+                # Resistor connects left and right adjacent positions
+                n1 = self._get_node_number(x - 1, y)  # left terminal
+                n2 = self._get_node_number(x + 1, y)  # right terminal
                 params.update({"n1": n1, "n2": n2})
+            elif tool == Tool.WIRE:
+                # Wire connects to all adjacent positions it should connect to
+                # For now, connect left and right (horizontal wire)
+                n1 = self._get_node_number(x - 1, y)  # left connection
+                n2 = self._get_node_number(x + 1, y)  # right connection
+                params.update({"n1": n1, "n2": n2})
+            else:
+                # Default: connect component position to right position
+                n1 = self._get_node_number(x, y)
+                n2 = self._get_node_number(x + 1, y)
+                params.update({"n1": n1, "n2": n2})
+            
+            print(f"Placing {tool.name} at ({x},{y}) with nodes {params.get('n1', 'N/A')}, {params.get('n2', 'N/A')}")
             
             # Create and configure the component
             component = component_class(**params)
