@@ -15,16 +15,6 @@ class CircuitSolver:
         self.num_voltage_sources = 0  # Number of independent voltage sources
         
     def prepare_system(self, components: List[Component]) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Prepare the system matrices for Modified Nodal Analysis.
-        Creates the augmented matrix [G C; B D] and RHS vector [I; E].
-        
-        Args:
-            components: List of all components in the circuit
-            
-        Returns:
-            Tuple of (A, z) - system matrix and RHS vector
-        """
         print("\nPreparing circuit system...")
         print("Components:", [(type(c).__name__, c.nodes) for c in components])
         
@@ -91,15 +81,6 @@ class CircuitSolver:
         return A, z
     
     def solve(self, components: List[Component]) -> Dict[int, float]:
-        """
-        Solve the circuit using Modified Nodal Analysis.
-        
-        Args:
-            components: List of all components in the circuit
-            
-        Returns:
-            Dictionary mapping node numbers to their voltages
-        """
         # Store components for connectivity analysis
         self.components = components
         
@@ -153,10 +134,6 @@ class CircuitSolver:
                 raise ValueError("Circuit cannot be solved. Check for floating nodes or invalid connections.")
     
     def _count_nodes_and_sources(self):
-        """
-        Count nodes and voltage sources in the circuit.
-        Node 0 is ground and is not included in the matrices.
-        """
         self.node_map.clear()
         self.voltage_sources.clear()
         used_nodes = set()
@@ -186,9 +163,6 @@ class CircuitSolver:
             self.node_count = 1  # Ensure at least one node for empty circuits
     
     def _handle_ground_connections(self, G: np.ndarray, components: List[Component]):
-        """
-        Handle ground connections in the circuit.
-        """
         grounded_nodes = set()
         
         # Find explicitly grounded nodes
@@ -211,11 +185,7 @@ class CircuitSolver:
                 G[idx, idx] += 1e6
                 print(f"Applied ground connection at matrix index {idx}")
     
-    def _stamp_voltage_source(self, vs: PowerSupply, G: np.ndarray, C: np.ndarray, 
-                             B: np.ndarray, E: np.ndarray, vs_idx: int):
-        """
-        Stamp a voltage source using proper MNA formulation.
-        """
+    def _stamp_voltage_source(self, vs: PowerSupply, G: np.ndarray, C: np.ndarray, B: np.ndarray, E: np.ndarray, vs_idx: int):
         n1, n2 = vs.nodes
         
         # Convert node numbers to matrix indices
@@ -244,9 +214,6 @@ class CircuitSolver:
         print(f"Stamped voltage source: E[{vs_idx}] = {E[vs_idx]}")
     
     def _stamp_passive_component(self, component: Component, G: np.ndarray, I: np.ndarray):
-        """
-        Stamp a passive component (resistor, wire) into the G matrix.
-        """
         if len(component.nodes) < 2:
             return  # Skip single-node components
             
@@ -277,15 +244,6 @@ class CircuitSolver:
         print(f"Stamped conductance: diagonal += {g}, off-diagonal -= {g}")
 
     def calculate_currents(self, node_voltages: Dict[int, float]) -> Dict[str, float]:
-        """
-        Calculate currents through all components given node voltages.
-        
-        Args:
-            node_voltages: Dictionary of node numbers to voltages
-            
-        Returns:
-            Dictionary mapping component names to their currents
-        """
         currents = {}
         
         for component in self.components:
@@ -301,10 +259,6 @@ class CircuitSolver:
         return currents
 
     def _analyze_connectivity(self) -> List[set]:
-        """
-        Analyze circuit connectivity to detect floating nodes.
-        Returns a list of connected components (sets of connected nodes).
-        """
         # Build adjacency graph
         graph = defaultdict(set)
         all_nodes = set()
@@ -346,10 +300,6 @@ class CircuitSolver:
         return connected_components
     
     def _validate_circuit_connectivity(self):
-        """
-        Validate that the circuit doesn't have floating nodes.
-        Raises detailed error message if connectivity issues are found.
-        """
         connected_components = self._analyze_connectivity()
         
         if len(connected_components) <= 1:

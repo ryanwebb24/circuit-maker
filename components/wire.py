@@ -24,25 +24,11 @@ class Wire(Component):
         self._adjacent_components = adjacent_components
 
     def stamp(self, G, I):
-        """
-        Stamp method for wire - handled by MNA solver.
-        This method is kept for interface compatibility but the actual
-        stamping is done by the solver's _stamp_passive_component method.
-        
-        Args:
-            G: Conductance matrix
-            I: Current vector
-        """
         # Wire stamping is handled by the MNA solver's _stamp_passive_component method
         # This method exists for interface compatibility
         pass
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
-        """
-        Draw the wire centered at pixel (px, py). The provided cell_w/cell_h
-        describe the pixel size of a single grid cell so the resistor sizes itself
-        appropriately without needing the renderer's grid math.
-        """
         if screen is None:
             return
         
@@ -77,26 +63,3 @@ class Wire(Component):
 
         pygame.draw.line(screen, self.color.rgb, (center_x - 1, top_y), (center_x - 1, bottom_y), 2)
         pygame.draw.line(screen, self.color.rgb, (left_x, center_y - 1), (right_x, center_y - 1), 2)
-            
-        # ori = 'h'
-        # if (self.orientation == Orientation.E or self.orientation == Orientation.W):
-        #     ori = 'h'
-        # else:
-        #     ori = 'v'
-
-        # if ori in ('v', 'vertical'):
-        #     top_y = py - half
-        #     bottom_y = py + half
-
-        #     cx_px = int(round(px))
-
-        #     # Draw line
-        #     pygame.draw.line(screen, self.color.rgb, (cx_px, top_y), (cx_px, bottom_y), 2)
-        # else:
-        #     left_x = px - half
-        #     right_x = px + half
-
-        #     cy_px = int(round(py))
-
-        #     # Draw line
-        #     pygame.draw.line(screen, self.color.rgb, (left_x, cy_px), (right_x, cy_px), 2)

@@ -5,7 +5,6 @@ class ComponentRenderer:
         self.grid_renderer = grid_renderer
 
     def draw(self):
-        """Draw all components in the circuit."""
         cell_w, cell_h = self.grid_renderer.grid_cell_size()
 
         for comp in self.circuit.components.values():

@@ -88,10 +88,6 @@ circuit-maker/
 └── main.py           # Application entry point
 ```
 
-## Future Plans
-
-See the [TODO.md](TODO.md) file for planned features and improvements.
-
 ## Author
 
 Ryan Webb - [GitHub Profile](https://github.com/ryanwebb24)

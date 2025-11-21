@@ -5,13 +5,6 @@ from ui.config import Colors
 
 class CircuitVisualizer:
     def __init__(self, screen, grid_renderer):
-        """
-        Initialize the circuit visualizer.
-        
-        Args:
-            screen: Pygame surface to draw on
-            grid_renderer: GridRenderer instance for coordinate conversion
-        """
         self.screen = screen
         self.grid_renderer = grid_renderer
         self.font = pygame.font.Font(None, 24)  # Default font for labels
@@ -21,12 +14,10 @@ class CircuitVisualizer:
         self.hovered_component = None  # Component currently being hovered over
         
     def set_values(self, voltages: Dict[int, float], currents: Dict[str, float]):
-        """Set the voltage and current values to display."""
         self.voltage_values = voltages
         self.current_values = currents
         
     def update_hover(self, mouse_pos, components):
-        """Update which component is being hovered over."""
         self.hovered_component = None
         if not mouse_pos:
             return
@@ -41,7 +32,6 @@ class CircuitVisualizer:
                 break
         
     def draw_voltage_labels(self, components: list[Component]):
-        """Draw comprehensive component information for the hovered component."""
         if not self.hovered_component:
             return
             
@@ -89,7 +79,6 @@ class CircuitVisualizer:
         self._draw_info_box(info_lines, px, py)
     
     def _get_terminal_name(self, component, terminal_index: int) -> str:
-        """Get a descriptive name for the component terminal."""
         from components.power_supply import PowerSupply
         from components.ground import Ground
         from components.resistor import Resistor
@@ -129,7 +118,6 @@ class CircuitVisualizer:
         return info
     
     def _calculate_power(self, component) -> float | None:
-        """Calculate power dissipated/supplied by the component."""
         if component.name not in self.current_values:
             return None
             
@@ -156,7 +144,6 @@ class CircuitVisualizer:
         return None
     
     def _draw_info_box(self, info_lines: list[str], px: float, py: float):
-        """Draw an information box with the given lines of text."""
         if not info_lines:
             return
             
@@ -203,7 +190,6 @@ class CircuitVisualizer:
             text_y += line_height
                 
     def draw_current_arrows(self, components: list[Component]):
-        """Draw current arrows and values near components."""
         if not self.current_values:
             return
             
@@ -263,6 +249,5 @@ class CircuitVisualizer:
             pygame.draw.line(self.screen, Colors.BLACK, end, head_right, 2)
             
     def draw(self, components: list[Component]):
-        """Draw all circuit analysis visualizations."""
         self.draw_voltage_labels(components)
         self.draw_current_arrows(components)

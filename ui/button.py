@@ -4,23 +4,6 @@ from ui.config import ButtonConfig
 
 
 class Button:
-    """A simple, reusable UI button for Pygame.
-
-    Features:
-    - Draws a rectangle with a label centered
-    - Hover and pressed visual states
-    - Click callback (left mouse button)
-    - Enable/disable
-
-    Usage:
-        btn = Button((x,y,w,h), "Click me", on_click=callback)
-        # in main loop:
-        for event in pygame.event.get():
-            btn.handle_event(event)
-        btn.update(pygame.mouse.get_pos())
-        btn.draw(screen)
-    """
-
     def __init__(
         self,
         rect: Tuple[int, int, int, int],
@@ -86,7 +69,6 @@ class Button:
         self.on_click = cb
 
     def update(self, mouse_pos: Tuple[int, int]) -> None:
-        """Update hover state using current mouse position."""
         if not self.enabled:
             self.hover = False
             self.pressed = False
@@ -94,7 +76,6 @@ class Button:
         self.hover = self.rect.collidepoint(mouse_pos)
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        """Handle Pygame events. Call this from your main event loop."""
         if not self.enabled:
             return
 
@@ -114,12 +95,10 @@ class Button:
             self.pressed = False
 
     def set_selected(self, selected: bool) -> None:
-        """Set the selected state of the button."""
         self.selected = selected
         self._render_text()
 
     def draw(self, surface: pygame.Surface) -> None:
-        """Draw the button to a pygame surface."""
         if not self.enabled:
             color = self.colors["disabled"]
         elif self.selected:

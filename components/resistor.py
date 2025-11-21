@@ -5,12 +5,6 @@ from components.enums import Orientation, ComponentColors
 
 class Resistor(Component):
     def __init__(self, name: str = "", n1: int = 0, n2: int = 0, x: int = 0, y: int = 0, orientation: Orientation = Orientation.E, color:ComponentColors = ComponentColors.RED, resistance: float = 0):
-        """Create a resistor.
-
-        orientation must be an instance of components.enums.Orientation (N/E/S/W).
-        Passing an int matching the enum value is allowed. Passing strings is no
-        longer supported.
-        """
         super().__init__(name, [n1, n2], x, y)
         self.resistance = resistance
         self.color = color
@@ -25,16 +19,6 @@ class Resistor(Component):
                 raise TypeError("orientation must be a components.enums.Orientation")
 
     def stamp(self, G, I):
-        """
-        Stamp the resistor's contribution into the circuit matrices.
-        For a resistor between nodes n1 and n2:
-        - Add conductance (1/R) to diagonal elements G[n1][n1] and G[n2][n2]
-        - Subtract conductance from off-diagonal elements G[n1][n2] and G[n2][n1]
-        
-        Args:
-            G: Conductance matrix to stamp into
-            I: Current vector (resistors don't contribute to I directly)
-        """
         if self.resistance == 0:  # Handle short circuit case
             return
             
@@ -56,27 +40,11 @@ class Resistor(Component):
             G[n2][n1] -= g  # Matrix must be symmetric
             
     def calculate_current(self, v1: float, v2: float) -> float:
-        """
-        Calculate the current through the resistor using Ohm's Law: I = V/R
-        Positive current flows from node 1 to node 2.
-        
-        Args:
-            v1: Voltage at node 1
-            v2: Voltage at node 2
-            
-        Returns:
-            Current through the resistor in amperes
-        """
         if self.resistance == 0:
             return 0.0  # Avoid division by zero
         return (v1 - v2) / self.resistance
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
-        """
-        Draw the resistor centered at pixel (px, py). The provided cell_w/cell_h
-        describe the pixel size of a single grid cell so the resistor sizes itself
-        appropriately without needing the renderer's grid math.
-        """
         if screen is None:
             return
 

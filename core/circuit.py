@@ -13,15 +13,6 @@ class Circuit:
         del self.components[(x,y)]
 
     def get_adjacent_components(self, x: int, y: int) -> tuple[bool, bool, bool, bool]:
-        """Check for components in adjacent positions (up, right, down, left).
-        
-        Args:
-            x: The x coordinate to check around
-            y: The y coordinate to check around
-            
-        Returns:
-            Tuple of (up, right, down, left) booleans indicating component presence
-        """
         return (
             isinstance(self.components.get((x, y - 1)), Component),  # up
             isinstance(self.components.get((x + 1, y)), Component),  # right

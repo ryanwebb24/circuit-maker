@@ -9,7 +9,6 @@ class ComponentColors(Enum):
 
     @property
     def rgb(self):
-        """Return the RGB tuple for this color."""
         return self.value
 
 class Orientation(Enum):

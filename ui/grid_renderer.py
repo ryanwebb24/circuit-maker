@@ -9,7 +9,6 @@ class GridRenderer:
         self.border = WindowConfig.BORDER
 
     def grid_cell_size(self):
-        """Return (cell_w, cell_h) in pixels for current renderer/circuit sizes."""
         inner_w = self.screen.get_width() - 2 * self.border
         inner_h = self.screen.get_height() - 2 * self.border
         
@@ -23,14 +22,12 @@ class GridRenderer:
         return cell_w, cell_h
 
     def grid_to_pixel(self, x, y):
-        """Return pixel center for grid cell (x,y)"""
         cell_w, cell_h = self.grid_cell_size()
         px = self.border + (x + 0.5) * cell_w
         py = self.border + (y + 0.5) * cell_h
         return px, py
 
     def pixel_to_grid(self, px, py):
-        """Map pixel coordinates (px,py) into integer grid cell indices (gx,gy)."""
         cell_w, cell_h = self.grid_cell_size()
         screen_w = self.screen.get_width()
         screen_h = self.screen.get_height()
@@ -49,7 +46,6 @@ class GridRenderer:
         return gx, gy
 
     def draw(self):
-        """Draw the grid lines."""
         screen_w = self.screen.get_width()
         screen_h = self.screen.get_height()
         inner_w = screen_w - 2 * self.border

@@ -3,19 +3,7 @@ import pygame
 from components.enums import Orientation, ComponentColors
 
 class Ground(Component):
-    def __init__(self, name: str = "GND", n1: int = 0, x: int = 0, y: int = 0, 
-                 orientation: Orientation = Orientation.S, 
-                 color: ComponentColors = ComponentColors.BLUE):
-        """Create a ground connection component.
-        
-        Args:
-            name: Name of the component (default: "GND")
-            n1: Node number to be grounded
-            x: X coordinate on grid
-            y: Y coordinate on grid
-            orientation: Direction component faces (N/E/S/W)
-            color: Color of the component when drawn
-        """
+    def __init__(self, name: str = "GND", n1: int = 0, x: int = 0, y: int = 0, orientation: Orientation = Orientation.S, color: ComponentColors = ComponentColors.BLUE):
         # Ground only needs one node (the one being grounded)
         super().__init__(name, [n1], x, y)
         self.color = color
@@ -30,29 +18,11 @@ class Ground(Component):
                 raise TypeError("orientation must be a components.enums.Orientation")
 
     def stamp(self, G, I):
-        """
-        Stamp method for ground connection - handled by MNA solver.
-        This method is kept for interface compatibility but the actual
-        ground handling is done by the solver's _handle_ground_connections method.
-        
-        Args:
-            G: Conductance matrix (ground handling done by solver)
-            I: Current vector (ground handling done by solver)
-        """
         # Ground connections are handled by the MNA solver directly
         # This method exists for interface compatibility
         pass
 
     def draw(self, screen, px: int, py: int, cell_w: float, cell_h: float):
-        """
-        Draw the ground symbol centered at pixel coordinates.
-        Draws traditional ground symbol (one long line with three shorter parallel lines).
-        
-        Args:
-            screen: Pygame surface to draw on
-            px, py: Pixel coordinates of center
-            cell_w, cell_h: Width and height of a grid cell
-        """
         if screen is None:
             return
 

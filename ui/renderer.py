@@ -46,7 +46,6 @@ class Renderer:
         self._setup_ui()
         
     def _setup_ui(self):
-        """Initialize UI elements like buttons."""
         btn_w, btn_h = ButtonConfig.WIDTH, ButtonConfig.HEIGHT
         padding = ButtonConfig.PADDING
         spacing = ButtonConfig.SPACING
@@ -73,7 +72,6 @@ class Renderer:
         self._update_tool_buttons()
 
     def _handle_ui_events(self, event):
-        """Handle UI-related events."""
         try:
             for button in self.tool_buttons:
                 button.handle_event(event)
@@ -82,7 +80,6 @@ class Renderer:
             print(f"Error handling UI event: {e}")
 
     def _update_tool_buttons(self):
-        """Update button states to match current tool."""
         current_tool = self.event_handler.current_tool
         print(current_tool)
         for button in self.tool_buttons:
@@ -90,16 +87,13 @@ class Renderer:
 
 
     def _on_add_component(self, tool:Tool = Tool.WIRE):
-        """Callback when a component button is clicked"""
         self.event_handler.set_current_tool(tool)
         self._update_tool_buttons()
 
     def _on_quit(self):
-        """Handle quit event."""
         self.running = False
 
     def handle_events(self):
-        """Process all pending events."""
         for event in pygame.event.get():
             # Handle UI events first
             self._handle_ui_events(event)
@@ -114,7 +108,6 @@ class Renderer:
             self.event_handler.handle_event(event, grid_coords)
 
     def _update_ui(self):
-        """Update and draw UI elements."""
         try:
             mouse_pos = pygame.mouse.get_pos()
 
@@ -126,7 +119,6 @@ class Renderer:
             print(f"Error updating UI: {e}")
 
     def solve_circuit(self):
-        """Solve the circuit and update visualization values."""
         try:
             # Get list of components
             components = list(self.circuit.components.values())
@@ -153,7 +145,6 @@ class Renderer:
             self.component_currents = {}
 
     def update(self):
-        """Update and render the game state."""
         # Maintain frame rate
         self.clock.tick(self.fps)
         
